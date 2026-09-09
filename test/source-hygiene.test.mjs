@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..');
 
-const EXTS = new Set(['.mjs', '.js', '.ps1', '.md', '.css', '.html', '.json', '.cmd']);
+const EXTS = new Set(['.mjs', '.js', '.ps1', '.md', '.css', '.html', '.json', '.cmd', '.yml']);
 const SKIP_DIRS = new Set(['node_modules', '.git', 'demo']);
 
 function sourceFiles(dir = ROOT, out = []) {

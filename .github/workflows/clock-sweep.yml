@@ -1,0 +1,22 @@
+# 시각 훑기 — 하루 여러 시각으로 시계를 옮겨 놓고 전체 검사를 다시 돌린다.
+#
+# 이 도구가 다루는 것은 전부 시각이고, 하루는 자정이 아니라 04시로 갈린다.
+# 그래서 "새벽에만 실패하는 검사" 가 실제로 생겼다 — 자정을 넘겨 작업하다 처음 드러났다.
+# 5분쯤 걸려서 푸시마다 돌리기에는 무겁고, 그렇다고 사람이 기억해서 돌리지도 않는다.
+name: 시각 훑기
+
+on:
+  schedule:
+    # 매주 월요일 (UTC 03:00). 주가 시작될 때 한 번이면 충분하다.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  sweep:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run test:clock

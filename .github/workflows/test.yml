@@ -1,0 +1,48 @@
+# 검사를 사람이 기억하지 않아도 돌게 한다.
+#
+# 이 저장소의 검사는 대부분 "여기서만 돌려서는 절대 만날 수 없는" 결함을 잡으려고 있다 —
+# 타임존, 업무일 경계, 플랫폼 차이. 그런 검사일수록 만든 사람의 기계에서만 돌면 뜻이 없다.
+name: 검사
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} · Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # 한쪽이 깨져도 나머지 결과는 봐야 원인을 좁힐 수 있다.
+      fail-fast: false
+      matrix:
+        # windows 는 이 도구가 실제로 쓰이는 자리(자동 추적이 Windows 전용)고,
+        # ubuntu 는 플랫폼 분기가 정말로 동작하는지 보는 대조군이다.
+        # 리눅스에서만 깨진다면 그건 "윈도우에서 우연히 되고 있었다" 는 뜻이다.
+        os: [windows-latest, ubuntu-latest]
+        # 22 는 package.json 이 요구하는 최소선, 24 는 사람들이 그냥 받게 되는 버전.
+        # 이 앱은 실험 단계인 node:sqlite 위에 통째로 얹혀 있어서, 다음 판에서
+        # 조용히 어긋나는 것을 미리 알아야 한다.
+        node: ['22', '24']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # 설치할 것이 없다 — npm 의존성 0개. 그래서 캐시도 락파일도 없다.
+      - name: 의존성이 정말 없는지 확인
+        shell: bash
+        run: |
+          if [ -d node_modules ]; then echo "node_modules 가 저장소에 들어 있습니다"; exit 1; fi
+          node -e "const p=require('./package.json');
+            const d={...p.dependencies,...p.devDependencies};
+            if(Object.keys(d).length){console.error('의존성이 생겼습니다:',Object.keys(d).join(', '));process.exit(1)}
+            console.log('의존성 0개 — 확인')"
+
+      - name: 검사
+        run: npm test
