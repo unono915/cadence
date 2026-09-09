@@ -1,0 +1,20 @@
+# 실행하면 생기는 것들 — 저장소에 담지 않는다.
+#
+# demo/ 는 `npm run demo` 로 언제든 다시 만든다. 저장소에 넣으면 커밋마다 1MB 짜리
+# 바이너리가 바뀌고, 무엇보다 **자기 기록이 담긴 데이터베이스를 실수로 올리는 길**이 된다.
+demo/
+node_modules/
+
+# 데이터베이스·백업·로그 — 어느 폴더에 있든.
+*.db
+*.db-shm
+*.db-wal
+cadence-backup-*.json
+cadence-errors.log
+tracker.lock
+
+# 편집기·운영체제 부스러기
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

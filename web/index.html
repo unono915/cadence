@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Cadence — 업무 생산성 콘솔</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%235b8def'/><path d='M8 20l4-8 4 5 4-9 4 12' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="rail">
+      <div class="rail-brand">
+        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+          <rect width="32" height="32" rx="7" fill="var(--accent)"></rect>
+          <path d="M8 20l4-8 4 5 4-9 4 12" fill="none" stroke="#fff" stroke-width="2.4"
+                stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span>Cadence</span>
+      </div>
+      <nav class="rail-nav" id="nav"></nav>
+      <div class="rail-foot">
+        <button class="palette-cue" id="palette-cue" title="명령 팔레트 열기">
+          <span>검색 · 실행</span>
+          <span class="palette-key">Ctrl K</span>
+        </button>
+        <div class="tracker-chip" id="tracker-chip" title="자동 추적 상태"></div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="view-title">오늘</h1>
+          <div class="day-nav" id="day-nav"></div>
+        </div>
+        <div class="topbar-right" id="focus-bar"></div>
+      </header>
+      <main class="content" id="content" aria-busy="false">
+        <div class="loading">불러오는 중…</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 토스트는 화면 구석에 잠깐 떴다 사라진다. aria-live 가 없으면 화면 낭독기 사용자에게는
+       "저장했습니다" 도 "요청 실패" 도 아예 존재하지 않는 것과 같다. -->
+  <div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+  <div class="modal-root" id="modal-root" hidden></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

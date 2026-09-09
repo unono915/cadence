@@ -1,0 +1,12 @@
+# 줄바꿈을 못박아 둔다.
+#
+# 윈도우에서 클론하면 git 이 기본적으로 CRLF 로 바꿔 준다. 대부분은 상관없지만
+# `.cmd` 는 다르다 — LF 만 있는 배치 파일은 cmd.exe 가 잘못 읽는 경우가 있고,
+# 그 파일이 바로 사람들이 더블클릭하는 그 파일이다.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 이미지·데이터베이스는 손대지 않는다.
+*.db binary
+*.png binary
