@@ -13,6 +13,10 @@ cadence-backup-*.json
 cadence-errors.log
 tracker.lock
 
+# 자동 실행을 등록하면 scripts/autostart.ps1 이 만드는 런처.
+# 등록한 사람의 경로와 포트가 박히므로 저장소에 담지 않는다.
+scripts/run-hidden.vbs
+
 # 편집기·운영체제 부스러기
 .vscode/
 .idea/
