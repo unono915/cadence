@@ -223,9 +223,15 @@ function shutdown(signal) {
       db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
       db.close();
     } catch { /* 이미 닫힘 */ }
-    process.exit(0);
+    // `process.exit()` 를 부르지 않는다.
+    //
+    // 표준출력이 파이프일 때(다른 프로그램이 우리를 띄운 경우) 유닉스에서는 쓰기가
+    // **비동기**다. 그 상태에서 곧바로 exit 하면 아직 나가지 못한 줄이 그대로 버려진다 —
+    // 하필 마지막에 찍는 "정리 중…" 같은, 무슨 일이 있었는지 알려 주는 줄이 사라진다.
+    // 여기까지 왔으면 남은 일이 없으므로 노드가 알아서 나간다.
+    process.exitCode = 0;
   });
-  // 열린 커넥션이 남아도 오래 매달리지 않는다.
+  // 열린 커넥션이 남아도 오래 매달리지 않는다. 이때는 어쩔 수 없이 강제로 끊는다.
   setTimeout(() => process.exit(0), 3000).unref();
 }
 
