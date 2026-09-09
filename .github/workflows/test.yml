@@ -37,25 +37,17 @@ jobs:
       # 설치할 것이 없다 — npm 의존성 0개. 그래서 캐시도 락파일도 없다.
       - name: 의존성이 정말 없는지 확인
         shell: bash
-        run: |
-          if [ -d node_modules ]; then echo "node_modules 가 저장소에 들어 있습니다"; exit 1; fi
-          node -e "const p=require('./package.json');
-            const d={...p.dependencies,...p.devDependencies};
-            if(Object.keys(d).length){console.error('의존성이 생겼습니다:',Object.keys(d).join(', '));process.exit(1)}
-            console.log('의존성 0개 — 확인')"
+        run: node .github/check-no-deps.mjs
 
-      # 로그 전체는 저장소 관리자만 볼 수 있다. 실패한 검사 이름만이라도
-      # 공개로 읽히는 자리(잡 요약·주석)에 남겨 둔다 — 그래야 원인을 좁힐 수 있다.
       - name: 검사
         shell: bash
         run: |
           set -o pipefail
-          npm test 2>&1 | tee test-output.txt && exit 0
-          echo "## 실패한 검사 (${{ matrix.os }} · Node ${{ matrix.node }})" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          grep -E "^not ok|^  (error|expected|actual|code):" test-output.txt | head -60 >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          grep -E "^not ok" test-output.txt | head -10 | while IFS= read -r line; do
-            echo "::error::$line"
-          done
-          exit 1
+          npm test 2>&1 | tee test-output.txt
+
+      # 로그와 잡 요약은 저장소 관리자만 볼 수 있다. 주석만 공개로 읽히므로
+      # 실패한 검사와 그 세부 내용을 그쪽으로 내보낸다.
+      - name: 실패한 검사를 주석으로
+        if: failure()
+        shell: bash
+        run: node .github/report-failures.mjs test-output.txt
