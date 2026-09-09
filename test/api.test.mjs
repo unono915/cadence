@@ -1334,6 +1334,21 @@ test('자동 사본은 하루에 한 번만 남고 최근 5개만 유지된다',
   assert.equal(autoSnapshot().created, true,
     '사본이 미래 시각을 달고 있으면 새로 만들어야 합니다 — 아니면 백업이 영영 멈춥니다');
 
+  // 다만 **아주 조금** 앞선 것은 시계가 뒤로 간 것이 아니다.
+  //
+  // 파일 시각은 밀리초 아래 자릿수까지 남는데 `Date.now()` 는 잘라 버린다. 그래서
+  // 방금 만든 사본이 0.3ms 쯤 미래로 보이는 일이 흔하다 — 파일 시각이 촘촘한 리눅스에서
+  // 특히 그렇다. 그걸 "시계가 뒤로 갔다" 로 읽으면 방금 만든 사본 옆에 하나를 더 만든다.
+  // CI 의 리눅스 판에서 **가끔만** 실패하는 검사로 드러났다. 여기서만 돌려서는 못 만난다.
+  const fresh = fs.readdirSync(DATA_DIR)
+    .filter((f) => /^cadence-backup-.*\.db$/.test(f))
+    .map((f) => ({ f, t: fs.statSync(`${DATA_DIR}/${f}`).mtimeMs }))
+    .sort((a, b) => b.t - a.t)[0];
+  const slightlyAhead = (Date.now() + 2) / 1000;
+  fs.utimesSync(`${DATA_DIR}/${fresh.f}`, slightlyAhead, slightlyAhead);
+  assert.equal(autoSnapshot().created, false,
+    '방금 만든 사본이 몇 밀리초 앞서 보인다고 사본을 또 만들면 안 됩니다');
+
   // 사용자가 손으로 넣어 둔 파일은 우리 것이 아니다.
   //
   // 이름을 `cadence-backup-*.db` 로 헐겁게 잡으면, 같은 폴더에 손으로 저장해 둔

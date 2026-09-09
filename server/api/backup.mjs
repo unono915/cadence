@@ -148,6 +148,25 @@ function pruneSnapshots() {
  * 사본은 DB 와 같은 폴더에 둔다 — 디스크 자체가 죽으면 함께 사라지므로,
  * 진짜 백업은 설정의 '전체 백업 (JSON)' 으로 밖에 내보내야 한다. README 에도 적어 둔다.
  */
+/**
+ * 파일 시각이 지금보다 **조금** 앞선 것은 시계가 뒤로 간 것이 아니다.
+ *
+ * 파일 시각은 밀리초 아래 자릿수까지 남는데 `Date.now()` 는 정수 밀리초로 잘라 버린다.
+ * 그래서 방금 만든 사본이 0.3ms 쯤 '미래' 로 보이는 일이 흔하다 — 리눅스처럼 파일 시각이
+ * 촘촘한 곳에서 그렇다. 그 값을 "시계가 뒤로 갔다" 로 읽으면, 방금 만든 사본을 두고
+ * 곧바로 하나를 더 만든다. 실제로 CI 의 리눅스 판에서 **가끔만** 실패하는 검사가 됐다.
+ *
+ * 진짜 문제는 크게 앞선 경우다 — 서머타임, NTP 보정, 시각이 틀린 채 쓰던 노트북,
+ * 다른 PC 에서 옮겨 온 폴더. 그때는 낡은 것으로 봐야 자동 백업이 영영 멈추지 않는다.
+ * 둘을 가르는 선을 둔다.
+ */
+const CLOCK_JITTER_MS = 5_000;
+
+function snapshotAge(raw) {
+  if (raw >= 0) return raw;
+  return raw > -CLOCK_JITTER_MS ? 0 : Infinity;
+}
+
 export function autoSnapshot({ maxAgeMs = 24 * 3600_000 } = {}) {
   const newest = snapshotFiles()[0];
   // 나이가 **음수**면 사본이 미래 시각을 달고 있다는 뜻이다. 시계가 뒤로 간 것이다 —
@@ -155,8 +174,8 @@ export function autoSnapshot({ maxAgeMs = 24 * 3600_000 } = {}) {
   // 그냥 `age < maxAgeMs` 로 두면 음수는 언제나 참이라 **자동 사본이 영영 멈춘다.**
   // 아무 오류도 나지 않고 화면에도 표시되지 않으므로, 백업이 없다는 사실은
   // 정작 필요한 순간에야 드러난다. 미래 사본은 낡은 것으로 본다.
-  const age = newest ? Date.now() - newest.t : Infinity;
-  if (newest && age >= 0 && age < maxAgeMs) {
+  const age = newest ? snapshotAge(Date.now() - newest.t) : Infinity;
+  if (newest && age < maxAgeMs) {
     return { created: false, newest: newest.f };
   }
   try {
